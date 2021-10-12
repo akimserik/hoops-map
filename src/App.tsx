@@ -13,8 +13,8 @@ import { MAP_ROUTE } from "./utils/constants";
 
 function App() {
   return (
-    <div className="main-div">
-      <Router>
+    <Router>
+      <div className="main-div">
         <Header />
         <Switch>
           <Route path="/map">
@@ -25,8 +25,8 @@ function App() {
           </Route>
           <Redirect to={MAP_ROUTE} />
         </Switch>
-      </Router>
-    </div>
+      </div>
+    </Router>
   );
 }
 

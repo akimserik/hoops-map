@@ -42,7 +42,7 @@ const Header = (props: Props) => {
               }}
             >
               <Link to="/map" className="header-link">
-                Карта
+                Карта площадок
               </Link>
             </div>
             <div>

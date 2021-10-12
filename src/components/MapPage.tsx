@@ -1,42 +1,67 @@
-import { useState } from "react";
+import { useContext, useState, useEffect, useCallback } from "react";
 
 import { YMaps, Map, Placemark } from "react-yandex-maps";
 
-// import Map2gis from "./Map2gis";
-
-import FormNewHoops from "./FormNewHoops";
+import FormNewHoop from "./NewHoop";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Button from "react-bootstrap/Button";
+import OverlayTrigger from "react-bootstrap/OverlayTrigger";
+import Tooltip from "react-bootstrap/Tooltip";
+
+import { Context } from "../index";
+import { useAuthState } from "react-firebase-hooks/auth";
+
+import HoopsList from "./HoopsList";
+
+import {
+  collection,
+  addDoc,
+  getDocs,
+  serverTimestamp,
+} from "firebase/firestore";
+
+// import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 interface Props {}
 
 const MapPage = (props: Props) => {
-  const [hoops, setHoops] = useState([
-    {
-      id: 1,
-      name: "Hoop1",
-      location: [43.227411, 76.941055],
-    },
-    {
-      id: 2,
-      name: "Hoop2",
-      location: [43.228415, 76.943061],
-    },
-  ]);
-
+  const { auth, db } = useContext(Context);
+  const [user] = useAuthState(auth);
+  const [hoopsData, setHoopsData] = useState<any[]>([]);
   const [coords, setCoords] = useState([]);
+  const [mode, setMode] = useState("list");
 
-  const addNewHoop = (newValue: { hoopName: string; hoopLocation: string }) => {
-    setHoops((prevState) => [
-      ...prevState,
-      {
-        id: prevState.length + 1,
+  const loadHoops = useCallback(async () => {
+    const hoopsSnapshot = await getDocs(collection(db, "hoops"));
+    setHoopsData(hoopsSnapshot.docs);
+  }, [db]);
+
+  useEffect(() => {
+    loadHoops();
+  }, [loadHoops]);
+
+  const addNewHoop = async (newValue: {
+    hoopName: string;
+    hoopLocation: string;
+    hoopImagesURLs: any[];
+  }) => {
+    try {
+      const newHoopObj = {
         name: newValue.hoopName,
         location: newValue.hoopLocation.split(",").map((el) => parseFloat(el)),
-      },
-    ]);
+        images: newValue.hoopImagesURLs,
+        createdBy: user.email,
+        createdAt: serverTimestamp(),
+      };
+      const docRef = await addDoc(collection(db, "hoops"), newHoopObj);
+      console.log("Document written with ID: ", docRef.id);
+      loadHoops();
+      setMode("list");
+    } catch (e) {
+      console.error("Error adding document: ", e);
+    }
   };
 
   const onMapClick = (e: any) => {
@@ -46,11 +71,21 @@ const MapPage = (props: Props) => {
 
   return (
     <Container fluid className="h-100">
-      <Row className="h-100">
-        <Col className="mt-3">
-          <FormNewHoops addNewHoop={addNewHoop} coords={coords} />
+      <Row className="h-100" style={{ maxHeight: "100%" }}>
+        <Col style={{ padding: "1rem", maxHeight: "100%", overflowY: "auto" }}>
+          {mode === "list" ? (
+            <HoopsList hoops={hoopsData} />
+          ) : (
+            <FormNewHoop
+              addNewHoop={addNewHoop}
+              coords={coords}
+              backToList={() => {
+                setMode("list");
+              }}
+            />
+          )}
         </Col>
-        <Col lg={8} style={{ padding: "2rem", position: "relative" }}>
+        <Col lg={9} style={{ padding: "1rem", position: "relative" }}>
           <YMaps>
             <Map
               width="100%"
@@ -63,7 +98,9 @@ const MapPage = (props: Props) => {
               modules={["control.ZoomControl", "control.FullscreenControl"]}
               onClick={onMapClick}
             >
-              {hoops.map((hoop) => {
+              {hoopsData.map((hoop) => {
+                const { name, location } = hoop.data();
+
                 return (
                   <Placemark
                     key={hoop.id}
@@ -71,18 +108,30 @@ const MapPage = (props: Props) => {
                       "geoObject.addon.balloon",
                       "geoObject.addon.hint",
                     ]}
-                    defaultGeometry={hoop.location}
+                    defaultGeometry={location}
                     properties={{
-                      balloonContent: hoop.name,
+                      balloonContent: name,
                     }}
                   />
                 );
               })}
             </Map>
           </YMaps>
-          <Button style={{ position: "absolute", top: 40, left: 45 }}>
-            Добавить площадку
-          </Button>
+          <OverlayTrigger
+            overlay={
+              <Tooltip>
+                {user ? "Добавить новую площадку" : "Авторизуйтесь"}
+              </Tooltip>
+            }
+          >
+            <Button
+              variant={user ? "primary" : "secondary"}
+              style={{ position: "absolute", top: 40, left: 45 }}
+              onClick={() => user && setMode("new")}
+            >
+              Добавить площадку
+            </Button>
+          </OverlayTrigger>
         </Col>
       </Row>
     </Container>
