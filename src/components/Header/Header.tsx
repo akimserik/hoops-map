@@ -9,7 +9,7 @@ import { useHistory, Link } from "react-router-dom";
 
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useContext } from "react";
-import { Context } from "../index";
+import { Context } from "../../index";
 
 interface Props {}
 

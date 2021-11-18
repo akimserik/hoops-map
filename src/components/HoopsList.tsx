@@ -5,7 +5,7 @@ interface Props {
   hoops: any[];
 }
 
-const HoopsList = (props: Props) => {
+const HoopsList = React.memo((props: Props) => {
   return (
     <Container style={{ maxHeight: "100%", overflowY: "auto" }}>
       {props.hoops.map((hoop) => {
@@ -32,6 +32,6 @@ const HoopsList = (props: Props) => {
       })}
     </Container>
   );
-};
+});
 
 export default HoopsList;

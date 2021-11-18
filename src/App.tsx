@@ -1,5 +1,5 @@
 import "./app.css";
-import Header from "./components/Header";
+import Header from "./components/Header/Header";
 import MapPage from "./components/MapPage";
 import LoginPage from "./components/LoginPage";
 import {

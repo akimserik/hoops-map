@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useContext } from "react"; //
+import React, { useState, useEffect, useRef, useContext } from "react"; //
 
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
@@ -25,10 +25,10 @@ const FormNewHoops = (props: Props) => {
   const [hoopLocation, setHoopLocation] = useState("");
   const [hoopImages, setHoopImages] = useState<any[]>([]);
   const [hoopImagesURLs, setHoopImagesURLs] = useState<any[]>([]);
-  const fileInputRef = useRef<any>();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { storage } = useContext(Context);
 
-  const onAddClick = async (e: any) => {
+  const onAddClick = async (e: React.FormEvent) => {
     e.preventDefault();
     props.addNewHoop({ hoopName, hoopLocation, hoopImagesURLs });
   };
@@ -43,7 +43,7 @@ const FormNewHoops = (props: Props) => {
 
   const onImageDelete = (e: any, index: number) => {
     setHoopImages((prevState) => prevState.filter((el, i) => i !== index));
-    fileInputRef.current.value = "";
+    if (fileInputRef.current) fileInputRef.current.value = "";
     deleteFileFromStorage(hoopImages[index].name);
   };
 
@@ -72,7 +72,7 @@ const FormNewHoops = (props: Props) => {
     return arrRes;
   };
 
-  const backToList = (e: any) => {
+  const backToList = (e: React.MouseEvent) => {
     e.preventDefault();
 
     hoopImages.forEach((image, index) => {

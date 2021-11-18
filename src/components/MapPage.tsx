@@ -22,16 +22,20 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 
-// import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-
 interface Props {}
+
+enum Modes {
+  list,
+  new,
+  edit,
+}
 
 const MapPage = (props: Props) => {
   const { auth, db } = useContext(Context);
   const [user] = useAuthState(auth);
   const [hoopsData, setHoopsData] = useState<any[]>([]);
   const [coords, setCoords] = useState([]);
-  const [mode, setMode] = useState("list");
+  const [mode, setMode] = useState<Modes>(Modes.list);
 
   const loadHoops = useCallback(async () => {
     const hoopsSnapshot = await getDocs(collection(db, "hoops"));
@@ -45,7 +49,7 @@ const MapPage = (props: Props) => {
   const addNewHoop = async (newValue: {
     hoopName: string;
     hoopLocation: string;
-    hoopImagesURLs: any[];
+    hoopImagesURLs: object[];
   }) => {
     try {
       const newHoopObj = {
@@ -58,7 +62,7 @@ const MapPage = (props: Props) => {
       const docRef = await addDoc(collection(db, "hoops"), newHoopObj);
       console.log("Document written with ID: ", docRef.id);
       loadHoops();
-      setMode("list");
+      setMode(Modes.list);
     } catch (e) {
       console.error("Error adding document: ", e);
     }
@@ -73,14 +77,14 @@ const MapPage = (props: Props) => {
     <Container fluid className="h-100">
       <Row className="h-100" style={{ maxHeight: "100%" }}>
         <Col style={{ padding: "1rem", maxHeight: "100%", overflowY: "auto" }}>
-          {mode === "list" ? (
+          {mode === Modes.list ? (
             <HoopsList hoops={hoopsData} />
           ) : (
             <FormNewHoop
               addNewHoop={addNewHoop}
               coords={coords}
               backToList={() => {
-                setMode("list");
+                setMode(Modes.list);
               }}
             />
           )}
@@ -127,7 +131,7 @@ const MapPage = (props: Props) => {
             <Button
               variant={user ? "primary" : "secondary"}
               style={{ position: "absolute", top: 40, left: 45 }}
-              onClick={() => user && setMode("new")}
+              onClick={() => user && setMode(Modes.new)}
             >
               Добавить площадку
             </Button>
